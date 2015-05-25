@@ -27,9 +27,12 @@ def main(everything=True, full_text=False):
         if full_text:
             blog.pull()
 
+        # don't save full HTML content - this saves a LOT of space in database
+        blog._dom = None
+
         blogposts[blog.url] = blog
 
-        if (cnt % 25) == 0:
+        if (cnt % 5) == 0:
             commit()
 
     commit()
