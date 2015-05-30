@@ -10,15 +10,14 @@ from abclinuxuapi import iter_blogposts
 from abclinuxuapi import first_blog_page
 
 from transaction import commit
+from BTrees.OOBTree import OOBTree
 from zconf import get_zeo_key
 
 
 # Variables ===================================================================
 # Functions & classes =========================================================
 def main(everything=True, full_text=False):
-    blogposts = get_zeo_key("blogposts")
-    blog_urls = set(blogposts.keys())
-
+    blogposts = get_zeo_key("blogposts", OOBTree)
     blog_getter = iter_blogposts if everything else first_blog_page
 
     for cnt, blog in enumerate(blog_getter()):
@@ -47,7 +46,7 @@ if __name__ == '__main__':
         "-a",
         "--all",
         action="store_true",
-        help="Download whole blogarchive, not just only first page."
+        help="Download whole blogarchive, not just the first page."
     )
     parser.add_argument(
         "-f",
