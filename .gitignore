@@ -1,0 +1,4 @@
+*.pyc
+tests/login
+src/abclinuxuapi.egg-info
+dist/
