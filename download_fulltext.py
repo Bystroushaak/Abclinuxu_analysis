@@ -4,6 +4,8 @@
 # Interpreter version: python 2.7
 #
 # Imports =====================================================================
+import sys
+
 from transaction import commit
 from BTrees.OOBTree import OOBTree
 
@@ -15,6 +17,7 @@ from download_blogindex import pull
 # Variables ===================================================================
 # Functions & classes =========================================================
 def main():
+    sys.setrecursionlimit(100000)
     blogposts = get_zeo_key("blogposts", OOBTree)
 
     for blog in blogposts.values():
