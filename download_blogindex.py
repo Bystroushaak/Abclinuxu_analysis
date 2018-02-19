@@ -41,7 +41,7 @@ def main(everything=True, full_text=False, uniq=False):
         if full_text:
             blog.pull()
 
-        # don't save full HTML content - this saves a LOT of space in database
+        # don't save parsed HTML - this saves a LOT of space in database
         blog._dom = None
         blog._content_tag = None
 
