@@ -3,33 +3,28 @@
 #
 # Interpreter version: python 2.7
 #
-# Imports =====================================================================
 import argparse
 
 from retrying import retry
+from sqlitedict import SqliteDict
 from timeout_wrapper import timeout
+
 from abclinuxuapi import iter_blogposts
 from abclinuxuapi import first_blog_page
 
-from transaction import commit
-from BTrees.OOBTree import OOBTree
-
-from zconf import get_zeo_key
 
 
-# Variables ===================================================================
-# Functions & classes =========================================================
 @retry(stop_max_attempt_number=3, wait_fixed=20000)  # wait 20s
 @timeout(120)
 def pull(blog):
     blog.pull()
 
 
-def main(everything=True, full_text=False, uniq=False):
-    blogposts = get_zeo_key("blogposts", OOBTree)
+def download_blogtree(db_path, everything=True, full_text=False, uniq=False):
+    blogpost_db = SqliteDict(db_path, autocommit=False)
     blog_getter = iter_blogposts if everything else first_blog_page
 
-    already_downloaded = set(blogposts.keys())
+    already_downloaded = set(blogpost_db.keys())
 
     for cnt, blog in enumerate(blog_getter()):
         if uniq and blog.url in already_downloaded:
@@ -45,15 +40,15 @@ def main(everything=True, full_text=False, uniq=False):
         blog._dom = None
         blog._content_tag = None
 
-        blogposts[blog.url] = blog
+        blogpost_db[blog.url] = blog
 
         if (cnt % 5) == 0:
-            commit()
+            blogpost_db.commit()
 
-    commit()
+    blogpost_db.commit()
+    blogpost_db.close()
 
 
-# Main program ================================================================
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Download index of all published blogs."
@@ -68,7 +63,7 @@ if __name__ == '__main__':
         "-f",
         "--full",
         action="store_true",
-        help="Download full text of the blog and comments."
+        help="Download full texts of the blog and comments."
     )
     parser.add_argument(
         "-u",
@@ -76,7 +71,16 @@ if __name__ == '__main__':
         action="store_true",
         help="Skip already downloaded items."
     )
+    parser.add_argument(
+        "PATH",
+        help="Path to the SQLite file where the results will be stored."
+    )
 
     args = parser.parse_args()
 
-    main(everything=args.all, full_text=args.full, uniq=args.uniq)
+    download_blogtree(
+        db_path=args.PATH,
+        everything=args.all,
+        full_text=args.full,
+        uniq=args.uniq,
+    )
