@@ -3,6 +3,7 @@
 #
 # Interpreter version: python 2.7
 #
+import sys
 import argparse
 
 from retrying import retry
@@ -11,7 +12,7 @@ from timeout_wrapper import timeout
 
 from abclinuxuapi import iter_blogposts
 from abclinuxuapi import first_blog_page
-
+from abclinuxuapi import number_of_blog_pages
 
 
 @retry(stop_max_attempt_number=3, wait_fixed=20000)  # wait 20s
@@ -26,12 +27,24 @@ def download_blogtree(db_path, everything=True, full_text=False, uniq=False):
 
     already_downloaded = set(blogpost_db.keys())
 
+    no_blogs = ""
+    if everything:
+        print "Estimating number of blogs..",
+
+        def print_progress(n):
+            sys.stdout.write(".")
+            sys.stdout.flush()
+
+        no_blogs = "/ ~%d" % (number_of_blog_pages(print_progress) * 25)
+
+        print
+
     for cnt, blog in enumerate(blog_getter()):
         if uniq and blog.url in already_downloaded:
-            print "skipping", blog.title
+            print "skipping", cnt + 1, blog.title
             continue
 
-        print cnt + 1, blog.title
+        print cnt + 1, no_blogs, blog.title
 
         if full_text:
             blog.pull()
