@@ -1,5 +1,5 @@
 retrying
 sqlitedict
 timeout_wrapper>=0.1.0
-abclinuxuapi>=0.4.12
+abclinuxuapi>=0.4.13
 pydhtmlparser>=2.2.2
