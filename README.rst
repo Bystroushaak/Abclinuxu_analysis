@@ -25,4 +25,4 @@ Analysis of blogs. Output is graphs and .csv files with various tracked paramete
 generate_gephi_interaction_dataset.py
 -------------------------------------
 
-Genrate Gephi import sqlite file showing who talks with who in comments.
+Generate `Gephi<https://gephi.org/>`_ import sqlite file showing who talks with who in comments.
