@@ -32,14 +32,16 @@ def sqlitedict_writer(db_path, no_blogs, number_of_downloaders, blog_queue):
                 blog = blog_queue.get(block=True, timeout=5)
             except Empty:
                 circuit_breaker += 1
-                if circuit_breaker > 5:
+                if circuit_breaker > 5 or number_of_active_downloaders <= 0:
                     break
                 continue
 
+            if number_of_active_downloaders <= 0:
+                break
+
             if isinstance(blog, WorkerDone):
                 number_of_active_downloaders -= 1
-            if number_of_active_downloaders == 0:
-                break
+                continue
 
             blogpost_db[blog.url] = blog
             print cnt + 1, no_blogs, blog.title
