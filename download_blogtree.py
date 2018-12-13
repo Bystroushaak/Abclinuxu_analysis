@@ -17,6 +17,9 @@ from abclinuxuapi import iter_blogposts
 from abclinuxuapi import first_blog_page
 from abclinuxuapi import number_of_blog_pages
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 class WorkerDone(object):
     pass
@@ -52,7 +55,7 @@ def sqlitedict_writer(db_path, no_blogs, number_of_downloaders, blog_queue):
         blogpost_db.commit()
 
 
-@retry(stop_max_attempt_number=3, wait_fixed=20000)  # wait 20s
+@retry(stop_max_attempt_number=5, wait_fixed=120000)  # wait 120s
 @timeout(120)
 def pull(blog):
     blog.pull()
