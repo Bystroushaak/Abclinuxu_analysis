@@ -4,6 +4,7 @@
 # Interpreter version: python 2.7
 #
 import sys
+import time
 import argparse
 from Queue import Empty
 from multiprocessing import Queue
@@ -71,14 +72,26 @@ def blog_downloader(in_queue, writer_queue):
             blog = in_queue.get(block=True, timeout=5)
         except Empty:
             # wait for more urls
+            time.sleep(1)
             continue
 
         if isinstance(blog, WorkerDone):
             writer_queue.put(WorkerDone())
             break
 
-        pull(blog)
-        writer_queue.put(blog)
+        try:
+            pull(blog)
+            writer_queue.put(blog)
+        except Exception as e:
+            print("Exception: %s on blog %s" % (str(e), blog.url))
+            time.sleep(10)
+
+            try:
+                pull(blog)
+                writer_queue.put(blog)
+            except:
+                print("Another exception: %s on blog %s, skipping.." % (str(e), blog.url))
+                continue
 
 
 def get_number_of_blogs():
