@@ -27,16 +27,18 @@ class WorkerDone(object):
 
 
 def sqlitedict_writer(db_path, no_blogs, number_of_downloaders, blog_queue):
-    circuit_breaker = 0
+    BREAK_AFTER = 300 / 5  # 300s / 5s timeout = 60 retries
+    circuit_breaker = BREAK_AFTER
     number_of_active_downloaders = number_of_downloaders
 
     with SqliteDict(db_path, autocommit=False) as blogpost_db:
         for cnt in xrange(100000000):
             try:
                 blog = blog_queue.get(block=True, timeout=5)
+                circuit_breaker = BREAK_AFTER
             except Empty:
                 circuit_breaker += 1
-                if circuit_breaker > 5 or number_of_active_downloaders <= 0:
+                if circuit_breaker >= 60 or number_of_active_downloaders <= 0:
                     break
                 continue
 
