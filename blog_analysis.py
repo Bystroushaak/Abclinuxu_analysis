@@ -3,6 +3,7 @@
 import os
 import csv
 import sys
+import time
 import os.path
 import shutil
 import argparse
@@ -16,7 +17,7 @@ from sqlitedict import SqliteDict
 
 
 class BlogAnalyzer(object):
-    def __init__(self):
+    def __init__(self, only_for_year=False):
         self.length_of_blogs_in_years = defaultdict(int)
         self.length_of_blogs_in_months = defaultdict(int)
 
@@ -40,6 +41,8 @@ class BlogAnalyzer(object):
 
         self.read_counter_in_years = defaultdict(int)
         self.read_counter_in_months = defaultdict(int)
+
+        self.only_for_year = only_for_year
 
     def timestamp_to_yyyy(self, timestamp):
         return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y')
@@ -75,6 +78,32 @@ class BlogAnalyzer(object):
                 self.active_unregistered_people_in_years[comment_yyyy].add(username)
                 self.active_unregistered_people_in_months[comment_yyyy_mm].add(username)
 
+        if self.only_for_year:
+            self._trim_older_than_one_year()
+
+    def _trim_older_than_one_year(self):
+        month_datasets = [
+            val for key, val in self.__dict__.items()
+            if key.endswith('months') and isinstance(val, defaultdict)
+        ]
+
+        years_datasets = [
+            val for key, val in self.__dict__.items()
+            if key.endswith('years') and isinstance(val, defaultdict)
+        ]
+
+        year = str(int(time.strftime('%Y')) - 1)
+        for dataset in years_datasets:
+            for key in list(dataset.keys()):
+                if key < year:
+                    del dataset[key]
+
+        year_month = '%s-%s' % (int(time.strftime('%Y')) - 1, time.strftime('%m'))
+        for dataset in month_datasets:
+            for key in list(dataset.keys()):
+                if key < year_month:
+                    del dataset[key]
+
     def dump_counter_into_csv(self, counter, csv_name):
         with open(csv_name, 'wb') as csvfile:
             writer = csv.writer(
@@ -101,9 +130,11 @@ class BlogAnalyzer(object):
         plt.plot(x_points, y_points)
         fig.tight_layout()
 
+        modulo = 1 if self.only_for_year else 6
+
         if "months" in dataset_name:
             for cnt, label in enumerate(ax.get_xticklabels()):
-                if cnt % 6 != 0:
+                if cnt % modulo != 0:
                     label.set_visible(False)
 
         plt.savefig(png_name)
@@ -215,8 +246,8 @@ class BlogAnalyzer(object):
             )
 
 
-def generate_report(blogtree_path, out_dir):
-    analyzer = BlogAnalyzer()
+def generate_report(blogtree_path, out_dir, only_for_year):
+    analyzer = BlogAnalyzer(only_for_year)
 
     with SqliteDict(blogtree_path) as serialized:
         for blog in tqdm(serialized.itervalues(), total=len(serialized)):
@@ -238,6 +269,12 @@ if __name__ == '__main__':
         default="datasets",
         help="Name of the output directory. Default `%(default)s.`",
     )
+    parser.add_argument(
+        "-y",
+        "--year",
+        action="store_true",
+        help="Only for last year."
+    )
 
     args = parser.parse_args()
 
@@ -250,4 +287,4 @@ if __name__ == '__main__':
 
     os.mkdir(args.output)
 
-    generate_report(args.blogtree, args.output)
+    generate_report(args.blogtree, args.output, args.year)
