@@ -54,6 +54,10 @@ class BlogAnalyzer(object):
         blog_yyyy = self.timestamp_to_yyyy(blog.created_ts)
         blog_yyyy_mm = self.timestamp_to_yyyy_mm(blog.created_ts)
 
+        this_year_month = time.strftime('%Y-%m')
+        if blog_yyyy_mm == this_year_month:
+            return
+
         self.length_of_blogs_in_years[blog_yyyy] += len(blog.text)
         self.length_of_blogs_in_months[blog_yyyy_mm] += len(blog.text)
 
