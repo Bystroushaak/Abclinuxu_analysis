@@ -99,9 +99,10 @@ class BlogAnalyzer(object):
                     del dataset[key]
 
         year_month = '%s-%s' % (int(time.strftime('%Y')) - 1, time.strftime('%m'))
+        this_year_month = time.strftime('%Y-%m')
         for dataset in month_datasets:
             for key in list(dataset.keys()):
-                if key < year_month:
+                if key < year_month or key == this_year_month:
                     del dataset[key]
 
     def dump_counter_into_csv(self, counter, csv_name):
@@ -127,6 +128,8 @@ class BlogAnalyzer(object):
         plt.xlabel(axis["x"].decode("utf-8"))
         plt.ylabel(axis["y"].decode("utf-8"))
         plt.xticks(rotation=60)
+        if self.only_for_year:
+            plt.ylim(ymin=0, ymax=max(y_points) + (max(y_points) / 20.0))
         plt.plot(x_points, y_points)
         fig.tight_layout()
 
@@ -249,9 +252,16 @@ class BlogAnalyzer(object):
 def generate_report(blogtree_path, out_dir, only_for_year):
     analyzer = BlogAnalyzer(only_for_year)
 
+    first_day_of_this_month = time.strptime(
+        time.strftime("%Y-%m-01 %H:%M:00"),
+        "%Y-%m-%d %H:%M:%S"
+    )
+    first_day_of_this_month_ts = time.strftime("%s", first_day_of_this_month)
+
     with SqliteDict(blogtree_path) as serialized:
         for blog in tqdm(serialized.itervalues(), total=len(serialized)):
-            analyzer.analyze(blog)
+            if blog.created_ts < first_day_of_this_month_ts:
+                analyzer.analyze(blog)
 
     analyzer.generate_report(out_dir)
 
