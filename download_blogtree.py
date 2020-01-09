@@ -26,6 +26,7 @@ class WorkerDone(object):
     pass
 
 
+@retry(stop_max_attempt_number=5, wait_fixed=1)
 def sqlitedict_writer(db_path, no_blogs, number_of_downloaders, blog_queue):
     BREAK_AFTER = 300 / 5  # 300s / 5s timeout = 60 retries
     circuit_breaker = 0
@@ -58,7 +59,7 @@ def sqlitedict_writer(db_path, no_blogs, number_of_downloaders, blog_queue):
         blogpost_db.commit()
 
 
-@retry(stop_max_attempt_number=5, wait_fixed=120000)  # wait 120s
+@retry(stop_max_attempt_number=10, wait_fixed=120000)  # wait 120s
 @timeout(120)
 def pull(blog):
     blog.pull()
