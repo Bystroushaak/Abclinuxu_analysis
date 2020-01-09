@@ -26,3 +26,9 @@ generate_gephi_interaction_dataset.py
 -------------------------------------
 
 Generate `Gephi <https://gephi.org/>`_ import sqlite file showing who talks with who in comments.
+
+
+generate_cal_data.py
+--------------------
+
+Generate calendar data files for `termgraph tool <https://github.com/mkaz/termgraph>`_.
