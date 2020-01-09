@@ -79,7 +79,10 @@ def blog_downloader(in_queue, writer_queue):
             continue
 
         if isinstance(blog, WorkerDone):
-            writer_queue.put(WorkerDone())
+            try:
+                writer_queue.put(WorkerDone())
+            except IOError:
+                break
             break
 
         try:
@@ -142,11 +145,19 @@ def download_blogtree(db_path, everything=True, full_text=False, uniq=False,
             print "skipping", cnt + 1, blog.title
             continue
 
-        empty_blog_queue.put(blog)
+        try:
+            empty_blog_queue.put(blog)
+        except IOError:
+            time.sleep(2)
+            empty_blog_queue.put(blog)
 
     # put signals for workers that job is done
     for _ in range(number_of_downloaders):
-        empty_blog_queue.put(WorkerDone())
+        try:
+            empty_blog_queue.put(WorkerDone())
+        except IOError:
+            time.sleep(2)
+            empty_blog_queue.put(WorkerDone())
 
     # wait for workers
     for worker in workers:
